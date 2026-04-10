@@ -16,12 +16,12 @@
 **Ví dụ HIGH similarity:**
 - Sentence A: Chẩn đoán hình ảnh
 - Sentence B: Siêu âm
-- Tại sao tương đồng: 
+- Tại sao tương đồng: Cùng một chủ đề về Thủ thuật - Phẫu thuật trong y khoa
 
 **Ví dụ LOW similarity:**
 - Sentence A: Chẩn đoán hình ảnh
 - Sentence B: Học máy
-- Tại sao khác:
+- Tại sao khác: Hai chủ đề khác nhau
 
 **Tại sao cosine similarity được ưu tiên hơn Euclidean distance cho text embeddings?**
 > Vì trong không gian embedding vector, khoảng cách Euclidean có thể bị ảnh hưởng bởi độ dài của vector (magnitude), trong khi cosine similarity chỉ đo lường góc giữa 2 vector, giúp tập trung vào hướng (nghĩa) hơn là độ dài. Điều này làm cho cosine similarity phù hợp hơn để đánh giá sự tương đồng về mặt ngữ nghĩa giữa các câu.
