@@ -222,16 +222,18 @@ tests/test_solution.py::TestEmbeddingStoreSearchWithFilter::test_no_filterreturn
 
 ## 5. Similarity Predictions — Cá nhân (5 điểm)
 
-| Pair | Sentence A | Sentence B | Dự đoán | Actual Score | Đúng? |
-|------|-----------|-----------|---------|--------------|-------|
-| 1 | "The quick brown fox jumps over the lazy dog." | "A quick brown fox jumps over the lazy dog." | high | 0.95 | Có |
-| 2 | "The quick brown fox jumps over the lazy dog." | "The slow gray cat sleeps under the warm sun." | low | 0.10 | Có |
-| 3 | "The quick brown fox jumps over the lazy dog." | "The quick brown fox runs through the forest." | high | 0.85 | Có |
-| 4 | "The quick brown fox jumps over the lazy dog." | "The lazy dog sleeps under the warm sun." | low | 0.20 | Có |
-| 5 | "The quick brown fox jumps over the lazy dog." | "The quick brown fox is very fast." | high | 0.90 | Có |
+| Pair | Sentence A | Sentence B | Dự đoán (Logic người) | Actual Score | Đúng dự đoán? |
+|------|-----------|-----------|-----------------------|--------------|---------------|
+| 1 | "Con mèo đen đang ngủ say trên chiếc ghế sofa ngoài phòng khách." | "Chú mèo mun đang nằm thiu thiu trên ghế nệm ở ngoài sảnh." | High (Cùng nghĩa) | 0.5706 | Không hẳn (Thấp hơn kỳ vọng) |
+| 2 | "Đội tuyển Việt Nam đã xuất sắc đánh bại Thái Lan trong trận chung kết." | "Thái Lan đã phải nhận thất bại trước đội tuyển Việt Nam ở trận đấu cuối cùng." | High (Cùng nghĩa) | 0.6827 | Có |
+| 3 | "Trời hôm nay mưa rất to và có sấm chớp dữ dội." | "Mùa mưa năm nay đến sớm hơn thường lệ làm nhiều tuyến phố bị ngập lụt." | Low/Medium (Cùng chủ đề) | 0.5189 | Có |
+| 4 | "Chiếc máy này có thời lượng pin rất trâu và camera chụp ảnh cực kỳ đẹp." | "Chiếc máy này pin cực kỳ yếu và chụp ảnh rất xấu." | Low (Trái nghĩa hoàn toàn) | 0.8633 | **Sai hoàn toàn** |
+| 5 | "Sáng nay tôi ra chợ mua một ít quả táo và quả cam về làm nước ép." | "Hãng Apple chuẩn bị ra mắt mẫu iPhone mới có phiên bản màu cam." | Low (Khác ngữ cảnh) | 0.3537 | Có |
 
 **Kết quả nào bất ngờ nhất? Điều này nói gì về cách embeddings biểu diễn nghĩa?**
-> Kết quả bất ngờ nhất là cặp 4, nơi "The quick brown fox jumps over the lazy dog." và "The lazy dog sleeps under the warm sun." có điểm similarity thấp hơn so với cặp 2. Điều này cho thấy embeddings có thể tập trung vào các từ khóa quan trọng (như "lazy dog") và bỏ qua các phần khác của câu, dẫn đến điểm similarity thấp hơn mặc dù có sự liên quan về mặt ngữ nghĩa.
+> Kết quả bất ngờ nhất chắc chắn là **Cặp 4**. Mặc dù hai câu mang ý nghĩa hoàn toàn trái ngược nhau (khen vs chê), điểm similarity lại cao nhất trong cả 5 cặp (0.8633). Ngược lại, Cặp 1 có ý nghĩa giống nhau 100% (chỉ dùng từ đồng nghĩa) lại chỉ đạt 0.5706.
+> 
+> Điều này cho thấy mô hình embedding đang sử dụng (all-MiniLM-L6-v2) bị phụ thuộc rất nặng vào **Lexical Overlap (Sự trùng lặp từ vựng)**. Nó nhận diện được hai câu Cặp 4 cùng nói về một chủ đề hẹp (chiếc máy, pin, camera, chụp ảnh) và gom chúng lại rất gần nhau trong không gian vector. Tuy nhiên, nó lại thất bại trong việc nắm bắt các từ mang tính từ chối/phủ định định hướng logic (như "yếu", "xấu" so với "trâu", "đẹp"). Ngược lại, ở Cặp 1, vì không có từ nào viết giống hệt nhau (mèo đen/mèo mun, sofa/ghế nệm), mô hình đã đánh giá chúng xa nhau hơn thực tế.
 
 ---
 
