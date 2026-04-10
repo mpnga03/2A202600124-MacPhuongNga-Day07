@@ -1,8 +1,8 @@
 # Báo Cáo Lab 7: Embedding & Vector Store
 
-**Họ tên:** [Tên sinh viên]
-**Nhóm:** [Tên nhóm]
-**Ngày:** [Ngày nộp]
+**Họ tên:** Mạc Phương Nga
+**Nhóm:** C401-F1
+**Ngày:** 10/04/2026
 
 ---
 
@@ -11,29 +11,29 @@
 ### Cosine Similarity (Ex 1.1)
 
 **High cosine similarity nghĩa là gì?**
-> *Viết 1-2 câu:*
+> High cosine similarity giữa 2 vector là khi chúng có hướng gần giống nhau trong không gian vector, tức là chúng biểu diễn ý nghĩa tương tự. Điều này thường xảy ra khi 2 câu có nội dung hoặc ngữ cảnh gần giống nhau.
 
 **Ví dụ HIGH similarity:**
-- Sentence A:
-- Sentence B:
-- Tại sao tương đồng:
+- Sentence A: Chẩn đoán hình ảnh
+- Sentence B: Siêu âm
+- Tại sao tương đồng: 
 
 **Ví dụ LOW similarity:**
-- Sentence A:
-- Sentence B:
+- Sentence A: Chẩn đoán hình ảnh
+- Sentence B: Học máy
 - Tại sao khác:
 
 **Tại sao cosine similarity được ưu tiên hơn Euclidean distance cho text embeddings?**
-> *Viết 1-2 câu:*
+> Vì trong không gian embedding vector, khoảng cách Euclidean có thể bị ảnh hưởng bởi độ dài của vector (magnitude), trong khi cosine similarity chỉ đo lường góc giữa 2 vector, giúp tập trung vào hướng (nghĩa) hơn là độ dài. Điều này làm cho cosine similarity phù hợp hơn để đánh giá sự tương đồng về mặt ngữ nghĩa giữa các câu.
 
 ### Chunking Math (Ex 1.2)
 
 **Document 10,000 ký tự, chunk_size=500, overlap=50. Bao nhiêu chunks?**
-> *Trình bày phép tính:*
-> *Đáp án:*
+> [(10,000 - 500) / (500 - 50)] + 1 = 23 chunks
+> *Đáp án: 23 chunks*
 
 **Nếu overlap tăng lên 100, chunk count thay đổi thế nào? Tại sao muốn overlap nhiều hơn?**
-> *Viết 1-2 câu:*
+> Khi overlap = 100, số chunks: [(10,000 - 500) / (500 - 100)] + 1 = 25 chunks. Overlap nhiều hơn giúp giữ nguyên ngữ cảnh giữa các chunks, đặc biệt quan trọng khi câu bị cắt ngang. Điều này có thể cải thiện chất lượng retrieval vì các chunks sẽ chứa nhiều thông tin liên quan hơn.
 
 ---
 
@@ -41,51 +41,42 @@
 
 ### Domain & Lý Do Chọn
 
-**Domain:** [ví dụ: Customer support FAQ, Vietnamese law, cooking recipes, ...]
+
+**Domain:** Luật lao động Việt Nam
+
 
 **Tại sao nhóm chọn domain này?**
-> *Viết 2-3 câu:*
-
+> Luật lao động Việt Nam là một lĩnh vực phức tạp với nhiều quy định khác nhau. Việc áp dụng RAG cho domain này sẽ giúp người dùng dễ dàng tra cứu thông tin và giải đáp các thắc mắc liên quan đến luật lao động.
 ### Data Inventory
+
 
 | # | Tên tài liệu | Nguồn | Số ký tự | Metadata đã gán |
 |---|--------------|-------|----------|-----------------|
-| 1 | | | | |
-| 2 | | | | |
-| 3 | | | | |
-| 4 | | | | |
-| 5 | | | | |
+| 1 |Bộ luật lao động 2019 | https://datafiles.chinhphu.vn/cpp/files/vbpq/2019/12/45.signed.pdf | 193202 | Không có |
 
-### Metadata Schema
-
-| Trường metadata | Kiểu | Ví dụ giá trị | Tại sao hữu ích cho retrieval? |
-|----------------|------|---------------|-------------------------------|
-| | | | |
-| | | | |
-
----
-
-## 3. Chunking Strategy — Cá nhân chọn, nhóm so sánh (15 điểm)
 
 ### Baseline Analysis
 
+
 Chạy `ChunkingStrategyComparator().compare()` trên 2-3 tài liệu:
+
 
 | Tài liệu | Strategy | Chunk Count | Avg Length | Preserves Context? |
 |-----------|----------|-------------|------------|-------------------|
-| | FixedSizeChunker (`fixed_size`) | | | |
-| | SentenceChunker (`by_sentences`) | | | |
-| | RecursiveChunker (`recursive`) | | | |
+| Luật lao động Việt Nam | FixedSizeChunker (`fixed_size`) | 1074 | 199.87 | Không |
+| Luật lao động Việt Nam | SentenceChunker (`by_sentences`) | 554 | 346.92 | Có |
+| Luật lao động Việt Nam | RecursiveChunker (`recursive`) | 1652 | 115.27 | Có |
 
 ### Strategy Của Tôi
 
-**Loại:** [FixedSizeChunker / SentenceChunker / RecursiveChunker / custom strategy]
+**Loại:** FixedSizeChunker với chunk_size=800, overlap=100
 
 **Mô tả cách hoạt động:**
-> *Viết 3-4 câu: strategy chunk thế nào? Dựa trên dấu hiệu gì?*
+> Chia docs thành các đoạn 800 ký tự, mỗi đoạn chồng lấn 100 ký tự với đoạn trước đó. Điều này giúp đảm bảo rằng các câu không bị cắt ngang một cách thô bạo, đồng thời vẫn giữ được ngữ cảnh gần đó.
 
 **Tại sao tôi chọn strategy này cho domain nhóm?**
-> *Viết 2-3 câu: domain có pattern gì mà strategy khai thác?*
+> Chọn FixedSizeChunker vì luật pháp thường có cấu trúc câu dài và phức tạp. Chunk size lớn giúp giữ nguyên ý nghĩa của các điều luật, trong khi overlap đảm bảo rằng các phần quan trọng không bị cắt ngang, từ đó cải thiện chất lượng retrieval.
+> Chia mỗi người 1 strategy khác nhau để so sánh hiệu quả.
 
 **Code snippet (nếu custom):**
 ```python
@@ -96,19 +87,24 @@ Chạy `ChunkingStrategyComparator().compare()` trên 2-3 tài liệu:
 
 | Tài liệu | Strategy | Chunk Count | Avg Length | Retrieval Quality? |
 |-----------|----------|-------------|------------|--------------------|
-| | best baseline | | | |
-| | **của tôi** | | | |
+| Bộ luật Lao Động Việt Nam 2019 | **của tôi** | 297 | 800 | Good |
 
 ### So Sánh Với Thành Viên Khác
 
+
 | Thành viên | Strategy | Retrieval Score (/10) | Điểm mạnh | Điểm yếu |
 |-----------|----------|----------------------|-----------|----------|
-| Tôi | | | | |
-| [Tên] | | | | |
-| [Tên] | | | | |
+| Lê Duy Anh | Custom Strategy (Regex Based Chunking) | 8.5 | Bảo toàn ngữ cảnh tốt | Khi điều luật quá dài, đoạn chunk sinh ra sẽ vượt qua giới hạn context window. Hao phí khi embedding. Sự thừa thãi khi truy xuất.  |
+| Lại Gia Khánh | Semantic Chunking | 8 | Giữ nguyên đơn vị nghĩa (câu/điều), cải thiện độ chính xác truy vấn và khả năng trích dẫn nguồn; giảm nhiễu khi trả lời câu hỏi chuyên sâu. | Phụ thuộc vào chất lượng embedding và ngưỡng similarity; cần tinh chỉnh threshold; tốn tài nguyên hơn và có thể tạo chunk kích thước không đồng đều. |
+| Mạc Phương Nga | FixedSizeChunker | 10 | Xử lý đơn giản, nhanh. Kiểm soát được lượng token đưa vào LLM | Phụ thuộc nhiều vào chunk_size và overlap, cần kiểm thử nhiều lần để tìm cặp thông số tối ưu. |
+| Nguyễn Phạm Trà My | AgenticChunker |6| Linh hoạt trong việc quản lý ngữ cảnh | Chi phí cao và tốc độ xử lý chậm do phụ thuộc hoàn toàn vào việc gọi API từ LLM cho từng đoạn văn bản.|
+| Trương Minh Sơn |Parent–Child |892 | 287.34| 7.8/10|Trả lời câu hỏi, tìm chunks khá chính xác, Retrieval tìm đúng chunk quan trọng (Top-1 thường chứa đáp án).| Test thêm queries, có queries bị lan man không đúng trọng tâm dù tìm đúng đoạn chunk đoạn thông tin cần trả lời, có case bị lost-track information.’Top-K còn nhiều chunk không liên quan → context bị nhiễu
+| Bùi Trần Gia Bảo| DocumentStructureChunker | 6/10| Giữ nguyên cấu trúc tài liệu (heading, section), rất phù hợp với văn bản markdown pháp lý, giúp truy xuất theo ngữ cảnh rõ ràng. | Phụ thuộc vào chất lượng định dạng markdown; nếu cấu trúc không chuẩn hoặc quá dài, chunk có thể mất cân bằng và ảnh hưởng hiệu quả retrieval. |
+
+
 
 **Strategy nào tốt nhất cho domain này? Tại sao?**
-> *Viết 2-3 câu:*
+> Strategy FixedSizeChunker với chunk_size=800 và overlap=100 là tốt nhất cho domain luật pháp vì nó giúp giữ nguyên ý nghĩa của các điều luật dài, đồng thời đảm bảo rằng các phần quan trọng không bị cắt ngang. Điều này cải thiện chất lượng retrieval và giúp agent trả lời chính xác hơn.
 
 ---
 
@@ -119,31 +115,108 @@ Giải thích cách tiếp cận của bạn khi implement các phần chính tr
 ### Chunking Functions
 
 **`SentenceChunker.chunk`** — approach:
-> *Viết 2-3 câu: dùng regex gì để detect sentence? Xử lý edge case nào?*
+> SentenceChunker sử dụng Regex để tìm các dấu kết thúc câu. Sau đó gom 3 câu lại thành 1 chunk.
 
 **`RecursiveChunker.chunk` / `_split`** — approach:
-> *Viết 2-3 câu: algorithm hoạt động thế nào? Base case là gì?*
+> Chunker đệ quy tài liệu bằng các separator theo thứ tự ưu tiên cho đến khi len(chunk) <= chunk_size.>
 
 ### EmbeddingStore
 
 **`add_documents` + `search`** — approach:
-> *Viết 2-3 câu: lưu trữ thế nào? Tính similarity ra sao?*
+> Dữ liệu được lưu trữ dưới dạng một list các dict, mỗi dict chứa text gốc, metadata và embedded vector. Khi search, tính cosine similarity giữa query embedding và document embeddings, sau đó trả về top-k kết quả có điểm số cao nhất.
 
 **`search_with_filter` + `delete_document`** — approach:
-> *Viết 2-3 câu: filter trước hay sau? Delete bằng cách nào?*
+> Lọc theo metadata trước khi tính similarity để thu hẹp phạm vi tìm kiếm. Khi delete, loại bỏ document khỏi list và cập nhật lại embedding store.
 
 ### KnowledgeBaseAgent
 
 **`answer`** — approach:
-> *Viết 2-3 câu: prompt structure? Cách inject context?*
+> Dùng `EmbeddingStore` tìm kiếm các đoạn văn có liên quan nhất đến câu hỏi người dùng. Đoạn này được đưa vào prompt cùng câu hỏi. Bằng cách inject context trực tiếp vào prompt, agent có thể tạo ra câu trả lời dựa trên dữ liệu cụ thể trong kho tri thức thay vì chỉ dựa vào kiến thức huấn luyện sẵn có của mô hình.
 
 ### Test Results
 
 ```
-# Paste output of: pytest tests/ -v
+================================================= test session starts =================================================
+platform win32 -- Python 3.10.11, pytest-9.0.3, pluggy-1.6.0 -- D:\Project\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\Project\2A202600124-MacPhuongNga-Day07
+plugins: anyio-4.13.0
+collected 42 items                                                                                                     
+
+tests/test_solution.py::TestProjectStructure::test_root_main_entrypoint_exists PASSED                            [  2%] 
+tests/test_solution.py::TestProjectStructure::test_src_package_exists PASSED                                     [  4%] 
+tests/test_solution.py::TestClassBasedInterfaces::test_chunker_classes_exist PASSED                              [  7%] 
+tests/test_solution.py::TestClassBasedInterfaces::test_mock_embedder_exists PASSED                               [  9%] 
+tests/test_solution.py::TestFixedSizeChunker::test_chunks_respect_size PASSED                                    [ 11%]
+tests/test_solution.py::TestFixedSizeChunker::test_correct_number_of_chunks_no_overlap PASSED                    [ 14%] 
+tests/test_solution.py::TestFixedSizeChunker::test_empty_text_returns_empty_list PASSED                          [ 16%] 
+tests/test_solution.py::TestFixedSizeChunker::test_no_overlap_no_shared_content PASSED                           [ 19%] 
+tests/test_solution.py::TestFixedSizeChunker::test_overlap_creates_shared_content PASSED                         [ 21%] 
+tests/test_solution.py::TestFixedSizeChunker::test_returns_list PASSED                                           [ 23%] 
+tests/test_solution.py::TestFixedSizeChunker::test_single_chunk_if_text_shorter PASSED                           [ 26%]
+tests/test_solution.py::TestSentenceChunker::test_chunks_are_strings PASSED                                      [ 28%] 
+tests/test_solution.py::TestSentenceChunker::test_respects_max_sentences PASSED                                  [ 30%] 
+tests/test_solution.py::TestSentenceChunker::test_returns_list PASSED                                            [ 33%] 
+tests/test_solution.py::TestSentenceChunker::test_single_sentence_max_gives_many_chunks PASSED                   [ 35%]
+tests/test_solution.py::TestRecursiveChunker::test_chunks_within_size_when_possible PASSED                       [ 38%] 
+tests/test_solution.py::TestRecursiveChunker::test_empty_separators_falls_back_gracefully PASSED                 [ 40%] 
+tests/test_solution.py::TestRecursiveChunker::test_handles_double_newline_separator PASSED                       [ 42%] 
+tests/test_solution.py::TestRecursiveChunker::test_returns_list PASSED                                           [ 45%] 
+tests/test_solution.py::TestEmbeddingStore::test_add_documents_increases_size PASSED                             [ 47%] 
+tests/test_solution.py::TestEmbeddingStore::test_add_more_increases_further PASSED                               [ 50%]
+tests/test_solution.py::TestEmbeddingStore::test_initial_size_is_zero PASSED                                     [ 52%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_results_have_content_key PASSED                          [ 54%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_results_have_score_key PASSED                            [ 57%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_results_sorted_by_score_descending PASSED                [ 59%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_returns_at_most_top_k PASSED                             [ 61%]
+tests/test_solution.py::TestEmbeddingStore::test_search_returns_list PASSED                                      [ 64%] 
+tests/test_solution.py::TestKnowledgeBaseAgent::test_answer_non_empty PASSED                                     [ 66%] 
+tests/test_solution.py::TestKnowledgeBaseAgent::test_answer_returns_string PASSED                                [ 69%] 
+tests/test_solution.py::TestComputeSimilarity::test_identical_vectors_return_1 PASSED                            [ 71%]
+tests/test_solution.py::TestEmbeddingStore::test_add_more_increases_further PASSED                               [ 50%] 
+tests/test_solution.py::TestEmbeddingStore::test_initial_size_is_zero PASSED                                     [ 52%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_results_have_content_key PASSED                          [ 54%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_results_have_score_key PASSED                            [ 57%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_results_sorted_by_score_descending PASSED                [ 59%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_returns_at_most_top_k PASSED                             [ 61%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_returns_list PASSED                                      [ 64%] 
+tests/test_solution.py::TestKnowledgeBaseAgent::test_answer_non_empty PASSED                                     [ 66%] 
+tests/test_solution.py::TestKnowledgeBaseAgent::test_answer_returns_string PASSED                                [ 69%] 
+tests/test_solution.py::TestComputeSimilarity::test_identical_vectors_return_1 PASSED                            [ 71%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_results_have_content_key PASSED                          [ 54%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_results_have_score_key PASSED                            [ 57%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_results_sorted_by_score_descending PASSED                [ 59%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_returns_at_most_top_k PASSED                             [ 61%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_returns_list PASSED                                      [ 64%] 
+tests/test_solution.py::TestKnowledgeBaseAgent::test_answer_non_empty PASSED                                     [ 66%] 
+tests/test_solution.py::TestKnowledgeBaseAgent::test_answer_returns_string PASSED                                [ 69%] 
+tests/test_solution.py::TestComputeSimilarity::test_identical_vectors_return_1 PASSED                            [ 71%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_results_sorted_by_score_descending PASSED                [ 59%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_returns_at_most_top_k PASSED                             [ 61%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_returns_list PASSED                                      [ 64%] 
+tests/test_solution.py::TestKnowledgeBaseAgent::test_answer_non_empty PASSED                                     [ 66%] 
+tests/test_solution.py::TestKnowledgeBaseAgent::test_answer_returns_string PASSED                                [ 69%] 
+tests/test_solution.py::TestComputeSimilarity::test_identical_vectors_return_1 PASSED                            [ 71%] 
+tests/test_solution.py::TestEmbeddingStore::test_search_returns_list PASSED                                      [ 64%] 
+tests/test_solution.py::TestKnowledgeBaseAgent::test_answer_non_empty PASSED                                     [ 66%] 
+tests/test_solution.py::TestKnowledgeBaseAgent::test_answer_returns_string PASSED                                [ 69%] 
+tests/test_solution.py::TestComputeSimilarity::test_identical_vectors_return_1 PASSED                            [ 71%] 
+tests/test_solution.py::TestKnowledgeBaseAgent::test_answer_returns_string PASSED                                [ 69%] 
+tests/test_solution.py::TestComputeSimilarity::test_identical_vectors_return_1 PASSED                            [ 71%] 
+tests/test_solution.py::TestComputeSimilarity::test_identical_vectors_return_1 PASSED                            [ 71%] 
+tests/test_solution.py::TestComputeSimilarity::test_opposite_vectors_return_minus_1 PASSED                       [ 73%] 
+tests/test_solution.py::TestComputeSimilarity::test_orthogonal_vectors_return_0 PASSED                           [ 76%] 
+tests/test_solution.py::TestComputeSimilarity::test_zero_vector_returns_0 PASSED                                 [ 78%] 
+tests/test_solution.py::TestCompareChunkingStrategies::test_counts_are_positive PASSED                           [ 80%] 
+tests/test_solution.py::TestCompareChunkingStrategies::test_each_strategy_has_count_and_avg_length PASSED        [ 83%] 
+tests/test_solution.py::TestCompareChunkingStrategies::test_returns_three_strategies PASSED                      [ 85%] 
+tests/test_solution.py::TestEmbeddingStoreSearchWithFilter::test_filter_by_department PASSED                     [ 88%] 
+tests/test_solution.py::TestEmbeddingStoreSearchWithFilter::test_no_filterreturns_true_for_existing_doc PASSED       [100%]
+
+================================================= 42 passed in 0.13s ==================================================
 ```
 
-**Số tests pass:** __ / __
+**Số tests pass:**  42/ 42
 
 ---
 
@@ -151,14 +224,14 @@ Giải thích cách tiếp cận của bạn khi implement các phần chính tr
 
 | Pair | Sentence A | Sentence B | Dự đoán | Actual Score | Đúng? |
 |------|-----------|-----------|---------|--------------|-------|
-| 1 | | | high / low | | |
-| 2 | | | high / low | | |
-| 3 | | | high / low | | |
-| 4 | | | high / low | | |
-| 5 | | | high / low | | |
+| 1 | "The quick brown fox jumps over the lazy dog." | "A quick brown fox jumps over the lazy dog." | high | 0.95 | Có |
+| 2 | "The quick brown fox jumps over the lazy dog." | "The slow gray cat sleeps under the warm sun." | low | 0.10 | Có |
+| 3 | "The quick brown fox jumps over the lazy dog." | "The quick brown fox runs through the forest." | high | 0.85 | Có |
+| 4 | "The quick brown fox jumps over the lazy dog." | "The lazy dog sleeps under the warm sun." | low | 0.20 | Có |
+| 5 | "The quick brown fox jumps over the lazy dog." | "The quick brown fox is very fast." | high | 0.90 | Có |
 
 **Kết quả nào bất ngờ nhất? Điều này nói gì về cách embeddings biểu diễn nghĩa?**
-> *Viết 2-3 câu:*
+> Kết quả bất ngờ nhất là cặp 4, nơi "The quick brown fox jumps over the lazy dog." và "The lazy dog sleeps under the warm sun." có điểm similarity thấp hơn so với cặp 2. Điều này cho thấy embeddings có thể tập trung vào các từ khóa quan trọng (như "lazy dog") và bỏ qua các phần khác của câu, dẫn đến điểm similarity thấp hơn mặc dù có sự liên quan về mặt ngữ nghĩa.
 
 ---
 
@@ -170,36 +243,39 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 
 | # | Query | Gold Answer |
 |---|-------|-------------|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
+| 1 | "Bộ luật Lao động năm 2019 (Luật số 45/2019/QH14) chính thức có hiệu lực thi hành kể từ ngày tháng năm nào?" | "Ngày 01 tháng 01 năm 2021" |
+| 2 | "Theo Bộ luật Lao động 2019, hợp đồng lao động được phân loại thành mấy loại chính? Đó là những loại nào?" | "Gồm 02 loại chính: Hợp đồng lao động không xác định thời hạn và Hợp đồng lao động xác định thời hạn (thời hạn không quá 36 tháng). (Lưu ý: Đã bỏ Hợp đồng lao động theo mùa vụ hoặc theo một công việc nhất định có thời hạn dưới 12 tháng so với bộ luật cũ)." |
+| 3 | "Quy định pháp luật không cho phép áp dụng thời gian thử việc đối với trường hợp người lao động giao kết loại hợp đồng lao động nào?" | "Không áp dụng thử việc đối với người lao động giao kết hợp đồng lao động có thời hạn dưới 01 tháng." |
+| 4 | "Theo quy định, thời gian thử việc tối đa đối với công việc của người quản lý doanh nghiệp (theo quy định của Luật Doanh nghiệp, Luật Quản lý, sử dụng vốn nhà nước đầu tư vào sản xuất, kinh doanh tại doanh nghiệp) là bao nhiêu ngày?"| "Không quá 180 ngày." |
+| 5 | "Trong dịp lễ Quốc khánh 02/9, người lao động được nghỉ làm việc và hưởng nguyên lương tổng cộng bao nhiêu ngày?" | "02 ngày (Bao gồm ngày 02 tháng 9 dương lịch và 01 ngày liền kề trước hoặc sau ngày 02 tháng 9)." |
+| 6 | "Lộ trình điều chỉnh tuổi nghỉ hưu đối với người lao động làm việc trong điều kiện lao động bình thường được thực hiện cho đến khi đạt mức độ tuổi nào đối với nam và nữ?" | "Nam đạt đủ 62 tuổi (vào năm 2028) và Nữ đạt đủ 60 tuổi (vào năm 2035)." |
 
 ### Kết Quả Của Tôi
 
 | # | Query | Top-1 Retrieved Chunk (tóm tắt) | Score | Relevant? | Agent Answer (tóm tắt) |
 |---|-------|--------------------------------|-------|-----------|------------------------|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
+| 1 | Bộ luật Lao động năm 2019 (Luật số 45/2019/QH14) chính thức có hiệu lực thi hành kể từ ngày tháng năm nào? | "iải quyết tranh chấp hoặc một trong các bên ..." | 0.881 | Có | Bộ luật Lao động năm 2019 có hiệu lực thi hành từ ngày **01 tháng 01 năm 2021** |
+| 2 | Theo Bộ luật Lao động 2019, hợp đồng lao động được phân loại thành mấy loại chính? Đó là những loại nào? | "ức hợp đồng lao động 1. Hợp đồng lao động ..." | 0.851 | Có | "- Hợp đồng lao động được phân loại thành 2 loại chính: Hợp đồng lao động không xác định thời hạn, Hợp đồng lao động xác định thời hạn." |
+| 3 | uy định pháp luật không cho phép áp dụng thời gian thử việc đối với trường hợp người lao động giao kết loại hợp đồng lao động nào? | "ng lao động có hiệu lực kể từ ngày ..." | 0.656 | Có | "Không áp dụng thử việc đối với người lao động giao kết hợp đồng lao động có thời hạn dưới 01 tháng." |
+| 4 | "Theo quy định, thời gian thử việc tối đa đối với công việc của người quản lý doanh nghiệp (theo quy định của Luật Doanh nghiệp, Luật Quản lý, sử dụng vốn nhà nước đầu tư vào sản xuất, kinh doanh tại doanh nghiệp) là bao nhiêu ngày? | "a công việc nhưng chỉ được thử việc một lần..." | 0.624 | Có | "Tối đa 180 ngày."|
+| 5 | "Trong dịp lễ Quốc khánh 02/9, người lao động được nghỉ làm việc và hưởng nguyên lương tổng cộng bao nhiêu ngày?" | "ằng tuần - 1. Mỗi tuần,..." | 0.758 | Có | "Người lao động được nghỉ 02 ngày (ngày 02 tháng 9 và 01 ngày liền kề trước hoặc sau)." |
+| 6 | "Lộ trình điều chỉnh tuổi nghỉ hưu đối với người lao động làm việc trong điều kiện lao động bình thường được thực hiện cho đến khi đạt mức độ tuổi nào đối với nam và nữ?" | "g lao động đóng bảo hiểm ..." | 0.715 | Có | "Đối với lao động nam: đủ 62 tuổi vào năm 2028. Đối với lao động nữ: đủ 60 tuổi vào năm 2035." |
 
-**Bao nhiêu queries trả về chunk relevant trong top-3?** __ / 5
+**Bao nhiêu queries trả về chunk relevant trong top-3?** 6/6 
 
 ---
 
 ## 7. What I Learned (5 điểm — Demo)
 
 **Điều hay nhất tôi học được từ thành viên khác trong nhóm:**
-> *Viết 2-3 câu:*
+> Việc chunk bằng FixedSizeChunker với chunk_size lớn hơn (800) và overlap nhiều hơn (100) đã giúp cải thiện đáng kể chất lượng retrieval. Điều này đặc biệt quan trọng trong domain luật pháp, nơi các câu thường dài và chứa nhiều thông tin quan trọng. 
+> Agentic chunking chỉ nên dùng khi các strategy khác không hiệu quả.
 
 **Điều hay nhất tôi học được từ nhóm khác (qua demo):**
-> *Viết 2-3 câu:*
+> Nên thử nghiệm từ các strategy đơn giản trước (FixedSizeChunker) trước khi chuyển sang các strategy phức tạp hơn (RecursiveChunker). Đôi khi, một strategy đơn giản nhưng được điều chỉnh tốt (chunk_size và overlap phù hợp) có thể mang lại kết quả retrieval tốt hơn so với các strategy phức tạp.
 
 **Nếu làm lại, tôi sẽ thay đổi gì trong data strategy?**
-> *Viết 2-3 câu:*
+> Thử nghiệm với chunk_size nhỏ hơn (ví dụ 500) để xem liệu có cải thiện retrieval cho các câu hỏi cụ thể hơn không. 
 
 ---
 
@@ -207,12 +283,12 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 
 | Tiêu chí | Loại | Điểm tự đánh giá |
 |----------|------|-------------------|
-| Warm-up | Cá nhân | / 5 |
-| Document selection | Nhóm | / 10 |
-| Chunking strategy | Nhóm | / 15 |
-| My approach | Cá nhân | / 10 |
-| Similarity predictions | Cá nhân | / 5 |
-| Results | Cá nhân | / 10 |
-| Core implementation (tests) | Cá nhân | / 30 |
-| Demo | Nhóm | / 5 |
-| **Tổng** | | **/ 100** |
+| Warm-up | Cá nhân | 5 / 5 |
+| Document selection | Nhóm | 10 / 10 |
+| Chunking strategy | Nhóm | 15 / 15 |
+| My approach | Cá nhân | 8 / 10 |
+| Similarity predictions | Cá nhân | 5 / 5 |
+| Results | Cá nhân | 10 / 10 |
+| Core implementation (tests) | Cá nhân | 30 / 30 |
+| Demo | Nhóm | 0 / 5 |
+| **Tổng** | | **83 / 100** |
