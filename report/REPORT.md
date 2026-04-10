@@ -30,6 +30,7 @@
 
 **Document 10,000 ký tự, chunk_size=500, overlap=50. Bao nhiêu chunks?**
 > [(10,000 - 500) / (500 - 50)] + 1 = 23 chunks
+> 
 > *Đáp án: 23 chunks*
 
 **Nếu overlap tăng lên 100, chunk count thay đổi thế nào? Tại sao muốn overlap nhiều hơn?**
@@ -76,6 +77,7 @@ Chạy `ChunkingStrategyComparator().compare()` trên 2-3 tài liệu:
 
 **Tại sao tôi chọn strategy này cho domain nhóm?**
 > Chọn FixedSizeChunker vì luật pháp thường có cấu trúc câu dài và phức tạp. Chunk size lớn giúp giữ nguyên ý nghĩa của các điều luật, trong khi overlap đảm bảo rằng các phần quan trọng không bị cắt ngang, từ đó cải thiện chất lượng retrieval.
+> 
 > Chia mỗi người 1 strategy khác nhau để so sánh hiệu quả.
 
 **Code snippet (nếu custom):**
@@ -270,7 +272,8 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 ## 7. What I Learned (5 điểm — Demo)
 
 **Điều hay nhất tôi học được từ thành viên khác trong nhóm:**
-> Việc chunk bằng FixedSizeChunker với chunk_size lớn hơn (800) và overlap nhiều hơn (100) đã giúp cải thiện đáng kể chất lượng retrieval. Điều này đặc biệt quan trọng trong domain luật pháp, nơi các câu thường dài và chứa nhiều thông tin quan trọng. 
+> Việc chunk bằng FixedSizeChunker với chunk_size lớn hơn (800) và overlap nhiều hơn (100) đã giúp cải thiện đáng kể chất lượng retrieval. Điều này đặc biệt quan trọng trong domain luật pháp, nơi các câu thường dài và chứa nhiều thông tin quan trọng.
+> 
 > Agentic chunking chỉ nên dùng khi các strategy khác không hiệu quả.
 
 **Điều hay nhất tôi học được từ nhóm khác (qua demo):**
